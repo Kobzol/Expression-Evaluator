@@ -21,7 +21,7 @@ namespace eval
 		this->result = result;
 		this->success = true;
 	}
-
+	
 	bool Evaluator::isDigit(char token)
 	{
 		return isdigit((int)token) != 0;
@@ -160,11 +160,7 @@ namespace eval
 
 				if (result.isSuccessful())
 				{
-					std::stringstream converter;
-
-					converter << result.getResult();
-
-					infix.append(converter.str() + " ");
+					infix.append(operand + " ");
 				}
 
 				operand.clear();
@@ -378,5 +374,4 @@ namespace eval
 		, { '%', 2 }
 		, { '^', 3 }
 	};
-
 }
