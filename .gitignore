@@ -157,4 +157,5 @@ $RECYCLE.BIN/
 .DS_Store
 
 # Own rules
-Expression Evaluator/*.vcxproj
+Expression Evaluator/Expression evaluator.vcxproj
+Expression Evaluator/Expression evaluator.vcxproj.filters

@@ -1,333 +1,357 @@
 ﻿#include "Evaluator.h"
 
-using namespace eval;
-
-bool EvaluationResult::isSuccessful()
+namespace eval
 {
-	return this->success;
-}
-double EvaluationResult::getResult()
-{
-	return this->result;
-}
-void EvaluationResult::setResult(double result)
-{
-	this->result = result;
-	this->success = true;
-}
-
-bool Evaluator::isDigit(char token)
-{
-	return isdigit((int) token) != 0;
-}
-bool Evaluator::isOperator(char token)
-{
-	if (precedences.find(token) != precedences.end())
+	EvaluationResult::EvaluationResult()
 	{
-		return true;
+		this->success = false;
+		this->result = 0.0;
 	}
 
-	return false;
-}
-bool Evaluator::isWhiteSpace(char token)
-{
-	return isspace((int) token) != 0;
-}
-bool Evaluator::isFloatingPoint(char token)
-{
-	if (token == '.' || token == ',')
+	bool EvaluationResult::isSuccessful()
 	{
-		return true;
+		return this->success;
 	}
-	else return false;
-}
-bool Evaluator::isHyphen(char token)
-{
-	if (token == '-')
+	double EvaluationResult::getResult()
 	{
-		return true;
+		return this->result;
 	}
-	else return false;
-}
-bool Evaluator::isLeftParentheses(char token)
-{
-	if (token == '(')
+	void EvaluationResult::setResult(double result)
 	{
-		return true;
+		this->result = result;
+		this->success = true;
 	}
-	else return false;
-}
-bool Evaluator::isRightParentheses(char token)
-{
-	if (token == ')')
-	{
-		return true;
-	}
-	else return false;
-}
-bool Evaluator::isNumberToken(char token)
-{
-	if (Evaluator::isDigit(token) || Evaluator::isFloatingPoint(token))
-	{
-		return true;
-	}
-	else return false;
-}
-unsigned int Evaluator::getOperatorPrecedence(char operatorSymbol)
-{
-	if (Evaluator::isOperator(operatorSymbol))
-	{
-		return precedences[operatorSymbol];
-	}
-	else return 0;
-}
 
-EvaluationResult Evaluator::stringToNumber(std::string input)
-{
-	EvaluationResult result;
-	double number;
-
-	bool foundPoint = false;
-
-	for (size_t i = 0; i < input.size(); i++)
+	bool Evaluator::isDigit(char token)
 	{
-		char token = input[i];
-
-		if (Evaluator::isFloatingPoint(token))
+		return isdigit((int)token) != 0;
+	}
+	bool Evaluator::isOperator(char token)
+	{
+		if (precedences.find(token) != precedences.end())
 		{
-			if (foundPoint)
+			return true;
+		}
+
+		return false;
+	}
+	bool Evaluator::isWhiteSpace(char token)
+	{
+		return isspace((int)token) != 0;
+	}
+	bool Evaluator::isFloatingPoint(char token)
+	{
+		if (token == '.' || token == ',')
+		{
+			return true;
+		}
+		else return false;
+	}
+	bool Evaluator::isHyphen(char token)
+	{
+		if (token == '-')
+		{
+			return true;
+		}
+		else return false;
+	}
+	bool Evaluator::isLeftParentheses(char token)
+	{
+		if (token == '(')
+		{
+			return true;
+		}
+		else return false;
+	}
+	bool Evaluator::isRightParentheses(char token)
+	{
+		if (token == ')')
+		{
+			return true;
+		}
+		else return false;
+	}
+	bool Evaluator::isNumberToken(char token)
+	{
+		if (Evaluator::isDigit(token) || Evaluator::isFloatingPoint(token))
+		{
+			return true;
+		}
+		else return false;
+	}
+	unsigned int Evaluator::getOperatorPrecedence(char operatorSymbol)
+	{
+		if (Evaluator::isOperator(operatorSymbol))
+		{
+			return precedences[operatorSymbol];
+		}
+		else return 0;
+	}
+
+	EvaluationResult Evaluator::stringToNumber(std::string input)
+	{
+		EvaluationResult result;
+		double number;
+
+		bool foundPoint = false;
+
+		for (size_t i = 0; i < input.size(); i++)
+		{
+			char token = input[i];
+
+			if (Evaluator::isFloatingPoint(token))
+			{
+				if (foundPoint)
+				{
+					return result;
+				}
+
+				foundPoint = true;
+			}
+			else if (Evaluator::isHyphen(token))
+			{
+				if (i != 0)
+				{
+					return result;
+				}
+			}
+			else if (Evaluator::isDigit(token) == false)
 			{
 				return result;
 			}
-
-			foundPoint = true;
 		}
-		else if (Evaluator::isHyphen(token))
+
+		if (input.size() > 0)
 		{
-			if (i != 0)
+			std::stringstream(input) >> number;
+			result.setResult(number);
+		}
+
+		return result;
+	}
+	std::string Evaluator::convertToInfix(std::string expr)
+	{
+		std::stack<char> symbols;
+
+		std::string infix;
+		std::string operand;
+		std::string converted;
+
+		for (size_t i = 0; i < expr.size(); i++)
+		{
+			char token = expr[i];
+
+			if (Evaluator::isNumberToken(token))
 			{
-				return result;
+				while (true)
+				{
+					operand.push_back(token);
+
+					if (i < expr.size() - 1 && (Evaluator::isDigit(expr[i + 1]) || Evaluator::isFloatingPoint(expr[i + 1])))
+					{
+						token = expr[++i];
+					}
+					else break;
+				}
+
+				EvaluationResult result;
+
+				result = stringToNumber(operand);
+
+				if (result.isSuccessful())
+				{
+					std::stringstream converter;
+
+					converter << result.getResult();
+
+					infix.append(converter.str() + " ");
+				}
+
+				operand.clear();
+			}
+			else if (Evaluator::isLeftParentheses(token))
+			{
+				symbols.push(token);
+			}
+			else if (Evaluator::isRightParentheses(token))
+			{
+				while (symbols.empty() == false && symbols.top() != '(')
+				{
+					converted = symbols.top();
+					infix.append(converted + " ");
+					symbols.pop();
+				}
+
+				if (symbols.empty() == false && symbols.top() == '(')
+				{
+					symbols.pop();
+				}
+			}
+			else if (Evaluator::isOperator(token))
+			{
+				if (Evaluator::isHyphen(token))
+				{
+					if (i != 0 && (Evaluator::isOperator(expr[i - 1]) || Evaluator::isLeftParentheses(expr[i - 1])))
+					{
+						operand.push_back(token);
+						continue;
+					}
+				}
+
+				char operatorSymbol;
+
+				while (symbols.empty() == false && Evaluator::isOperator(operatorSymbol = symbols.top()))
+				{
+					if (Evaluator::getOperatorPrecedence(token) <= Evaluator::getOperatorPrecedence(operatorSymbol))
+					{
+						converted = operatorSymbol;
+						infix.append(converted + " ");
+
+						symbols.pop();
+					}
+					else break;
+				}
+
+				symbols.push(token);
 			}
 		}
-		else if (Evaluator::isDigit(token) == false)
+
+		while (symbols.empty() == false)
+		{
+			converted = symbols.top();
+			infix.append(converted + " ");
+			symbols.pop();
+		}
+
+		return infix;
+	}
+	bool Evaluator::testParentheses(std::string expr)
+	{
+		int parenthesesCount = 0;
+
+		for (size_t i = 0; i < expr.size(); i++)
+		{
+			char token = expr[i];
+
+			if (Evaluator::isLeftParentheses(token))
+			{
+				parenthesesCount++;
+			}
+			else if (Evaluator::isRightParentheses(token))
+			{
+				if (parenthesesCount < 1)
+				{
+					return false;
+				}
+				else parenthesesCount--;
+			}
+		}
+
+		return parenthesesCount == 0;
+	}
+
+	EvaluationResult Evaluator::computeOperation(char operatorToken, std::stack<double> &tokens)
+	{
+		EvaluationResult result;
+
+		if (tokens.size() > 1)
+		{
+			double a = tokens.top();
+			tokens.pop();
+
+			double b = tokens.top();
+			tokens.pop();
+
+			switch (operatorToken)
+			{
+			case '+':
+				result.setResult(b + a);
+				break;
+			case '-':
+				result.setResult(b - a);
+				break;
+			case '/':
+			{
+				if (a != 0)
+				{
+					result.setResult(b / a);
+				}
+
+				break;
+			}
+			case '*':
+				result.setResult(b * a);
+				break;
+			case '%':
+				result.setResult(fmod(b, a));
+				break;
+			case '^':
+				result.setResult(pow(b, a));
+				break;
+			}
+		}
+
+		return result;
+	}
+	EvaluationResult Evaluator::EvaluateInfix(std::string expr)
+	{
+		EvaluationResult result;
+		std::stack<double> tokens;
+
+		bool success = true;
+
+		std::string operand;
+
+		if (Evaluator::testParentheses(expr) == false)
 		{
 			return result;
 		}
-	}
 
-	if (input.size() > 0)
-	{
-		std::stringstream(input) >> number;
-		result.setResult(number);
-	}
+		expr = "(" + expr + ")";
+		expr = Evaluator::convertToInfix(expr);
 
-	return result;
-}
-std::string Evaluator::convertToInfix(std::string expr)
-{
-	std::stack<char> symbols;
-
-	std::string infix;
-	std::string operand;
-	std::string converted;
-
-	for (size_t i = 0; i < expr.size(); i++)
-	{
-		char token = expr[i];
-
-		if (Evaluator::isNumberToken(token))
+		for (size_t i = 0; i < expr.size(); i++)
 		{
-			while (true)
+			char token = expr[i];
+
+			if (Evaluator::isNumberToken(token))
 			{
 				operand.push_back(token);
-
-				if (i < expr.size() - 1 && (Evaluator::isDigit(expr[i + 1]) || Evaluator::isFloatingPoint(expr[i + 1])))
+			}
+			else if (Evaluator::isOperator(token))
+			{
+				if (Evaluator::isHyphen(token))
 				{
-					token = expr[++i];
+					if (i != expr.size() - 1 && Evaluator::isWhiteSpace(expr[i + 1]) == false)
+					{
+						operand.push_back(token);
+						continue;
+					}
 				}
-				else break;
-			}
 
-			EvaluationResult result;
+				EvaluationResult computation = computeOperation(token, tokens);
 
-			result = stringToNumber(operand);
-
-			if (result.isSuccessful())
-			{
-				std::stringstream converter;
-
-				converter << result.getResult();
-
-				infix.append(converter.str() + " ");
-			}
-
-			operand.clear();
-		}
-		else if (Evaluator::isLeftParentheses(token))
-		{
-			symbols.push(token);
-		}
-		else if (Evaluator::isRightParentheses(token))
-		{
-			while (symbols.empty() == false && symbols.top() != '(')
-			{
-				converted = symbols.top();
-				infix.append(converted + " ");
-				symbols.pop();
-			}
-
-			if (symbols.empty() == false && symbols.top() == '(')
-			{
-				symbols.pop();
-			}
-		}
-		else if (Evaluator::isOperator(token))
-		{
-			if (Evaluator::isHyphen(token))
-			{
-				if (i != 0 && (Evaluator::isOperator(expr[i - 1]) || Evaluator::isLeftParentheses(expr[i - 1])))
+				if (computation.isSuccessful())
 				{
-					operand.push_back(token);
-					continue;
+					tokens.push(computation.getResult());
+				}
+				else
+				{
+					success = false;
+					break;
 				}
 			}
-
-			char operatorSymbol;
-
-			while (symbols.empty() == false && Evaluator::isOperator(operatorSymbol = symbols.top()))
+			else if (Evaluator::isWhiteSpace(token))
 			{
-				if (Evaluator::getOperatorPrecedence(token) <= Evaluator::getOperatorPrecedence(operatorSymbol))
+				EvaluationResult result;
+
+				result = stringToNumber(operand);
+
+				if (result.isSuccessful())
 				{
-					converted = operatorSymbol;
-					infix.append(converted + " ");
-
-					symbols.pop();
+					tokens.push(result.getResult());
+					operand.clear();
 				}
-				else break;
-			}
-
-			symbols.push(token);
-		}
-	}
-
-	while (symbols.empty() == false)
-	{
-		converted = symbols.top();
-		infix.append(converted + " ");
-		symbols.pop();
-	}
-
-	return infix;
-}
-bool Evaluator::testParentheses(std::string expr)
-{
-	int parenthesesCount = 0;
-
-	for (size_t i = 0; i < expr.size(); i++)
-	{
-		char token = expr[i];
-
-		if (Evaluator::isLeftParentheses(token))
-		{
-			parenthesesCount++;
-		}
-		else if (Evaluator::isRightParentheses(token))
-		{
-			if (parenthesesCount < 1)
-			{
-				return false;
-			}
-			else parenthesesCount--;
-		}
-	}
-
-	return parenthesesCount == 0;
-}
-
-EvaluationResult Evaluator::computeOperation(char operatorToken, std::stack<double> &tokens)
-{
-	EvaluationResult result;
-
-	if (tokens.size() > 1)
-	{
-		double a = tokens.top();
-		tokens.pop();
-
-		double b = tokens.top();
-		tokens.pop();
-
-		switch (operatorToken)
-		{
-		case '+':
-			result.setResult(b + a);
-			break;
-		case '-':
-			result.setResult(b - a);
-			break;
-		case '/':
-		{
-			if (a != 0)
-			{
-				result.setResult(b / a);
-			}
-
-			break;
-		}		
-		case '*':
-			result.setResult(b * a);
-			break;
-		case '%':
-			result.setResult(fmod(b, a));
-			break;
-		case '^':
-			result.setResult(pow(b, a));
-			break;
-		}	
-	}
-
-	return result;
-}
-EvaluationResult Evaluator::EvaluateInfix(std::string expr)
-{
-	EvaluationResult result;
-	std::stack<double> tokens;
-
-	bool success = true;
-
-	std::string operand;
-
-	if (Evaluator::testParentheses(expr) == false)
-	{
-		return result;
-	}
-
-	expr = "(" + expr + ")";
-	expr = Evaluator::convertToInfix(expr);
-
-	for (size_t i = 0; i < expr.size(); i++)
-	{
-		char token = expr[i];
-
-		if (Evaluator::isNumberToken(token))
-		{
-			operand.push_back(token);
-		}
-		else if (Evaluator::isOperator(token))
-		{
-			if (Evaluator::isHyphen(token))
-			{
-				if (i != expr.size() - 1 && Evaluator::isWhiteSpace(expr[i + 1]) == false)
-				{
-					operand.push_back(token);
-					continue;
-				}
-			}
-
-			EvaluationResult computation = computeOperation(token, tokens);
-
-			if (computation.isSuccessful())
-			{
-				tokens.push(computation.getResult());
 			}
 			else
 			{
@@ -335,40 +359,24 @@ EvaluationResult Evaluator::EvaluateInfix(std::string expr)
 				break;
 			}
 		}
-		else if (Evaluator::isWhiteSpace(token))
-		{
-			EvaluationResult result;
 
-			result = stringToNumber(operand);
-
-			if (result.isSuccessful())
-			{
-				tokens.push(result.getResult());
-				operand.clear();
-			}
-		}
-		else
+		if (success && tokens.size() == 1)
 		{
-			success = false;
-			break;
+			double resultData = tokens.top();
+			result.setResult(resultData);
 		}
+
+		return result;
 	}
 
-	if (success && tokens.size() == 1)
+	std::map<char, unsigned int> Evaluator::precedences =
 	{
-		double resultData = tokens.top();
-		result.setResult(resultData);
-	}
+		{ '+', 1 }
+		, { '-', 1 }
+		, { '*', 2 }
+		, { '/', 2 }
+		, { '%', 2 }
+		, { '^', 3 }
+	};
 
-	return result;
 }
-
-std::map<char, unsigned int> Evaluator::precedences =
-{
-	{ '+', 1 }
-	, { '-', 1 }
-	, { '*', 2 }
-	, { '/', 2 }
-	, { '%', 2 }
-	, { '^', 3 }
-};

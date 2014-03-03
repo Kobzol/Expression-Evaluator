@@ -16,11 +16,7 @@ namespace eval
 		double result;
 	
 	public:
-		EvaluationResult()
-		{
-			this->success = false;
-			this->result = 0.0;
-		}
+		EvaluationResult();
 		
 		bool isSuccessful();
 		double getResult();
