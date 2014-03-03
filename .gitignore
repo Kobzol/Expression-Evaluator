@@ -45,6 +45,7 @@ build/
 *.pidb
 *.log
 *.scc
+*.vcxproj
 
 # Visual C++ cache files
 ipch/
@@ -154,3 +155,6 @@ $RECYCLE.BIN/
 
 # Mac desktop service store files
 .DS_Store
+
+# Own rules
+Expression Evaluator/*.vcxproj
