@@ -38,11 +38,11 @@ namespace eval
 		static bool isNumberToken(char token);
 		static unsigned int getOperatorPrecedence(char operatorSymbol);
 
-		static EvaluationResult Evaluator::stringToNumber(std::string input);
+		static EvaluationResult stringToNumber(std::string input);
 		static std::string convertToInfix(std::string expr);
 		static bool testParentheses(std::string expr);
 
-		static EvaluationResult Evaluator::computeOperation(char operatorToken, std::stack<double> &tokens);
+		static EvaluationResult computeOperation(char operatorToken, std::stack<double> &tokens);
 	public:
 		static EvaluationResult EvaluateInfix(std::string expr);		
 	};
